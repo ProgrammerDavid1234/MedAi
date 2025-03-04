@@ -13,7 +13,7 @@ function Profile() {
             </div>
             <div className="ml-6">
               <h3 className="text-2xl font-semibold">John Doe</h3>
-              <p className="text-gray-500">Patient ID: P12345678</p>
+              <p className="text-gray-500">Patient ID: P1234567</p>
             </div>
           </div>
           
