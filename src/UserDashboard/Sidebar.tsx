@@ -1,0 +1,70 @@
+import React from 'react';
+import { Home, Calendar, MessageSquare, Search, FileText, Bell, User, LogOut } from 'lucide-react';
+import SidebarLink from './SidebarLink';
+
+interface SidebarProps {
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+}
+
+function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
+  return (
+    <div className="hidden md:flex md:flex-col md:w-64 bg-white shadow-md">
+      <div className="p-4 border-b">
+        <h1 className="text-xl font-bold text-blue-600">MedConnect</h1>
+      </div>
+      <nav className="flex-1 p-4 space-y-2">
+        <SidebarLink 
+          icon={<Home />} 
+          label="Dashboard" 
+          active={activeTab === 'dashboard'} 
+          onClick={() => setActiveTab('dashboard')} 
+        />
+        <SidebarLink 
+          icon={<Calendar />} 
+          label="Appointments" 
+          active={activeTab === 'appointments'} 
+          onClick={() => setActiveTab('appointments')} 
+        />
+        <SidebarLink 
+          icon={<MessageSquare />} 
+          label="Messages" 
+          active={activeTab === 'messages'} 
+          onClick={() => setActiveTab('messages')} 
+        />
+        <SidebarLink 
+          icon={<Search />} 
+          label="Find Doctors" 
+          active={activeTab === 'doctors'} 
+          onClick={() => setActiveTab('doctors')} 
+        />
+        <SidebarLink 
+          icon={<FileText />} 
+          label="Medical Records" 
+          active={activeTab === 'records'} 
+          onClick={() => setActiveTab('records')} 
+        />
+        <SidebarLink 
+          icon={<Bell />} 
+          label="Notifications" 
+          active={activeTab === 'notifications'} 
+          onClick={() => setActiveTab('notifications')} 
+        />
+        <SidebarLink 
+          icon={<User />} 
+          label="Profile" 
+          active={activeTab === 'profile'} 
+          onClick={() => setActiveTab('profile')} 
+        />
+      </nav>
+      <div className="p-4 border-t">
+        <button className="flex items-center text-gray-600 hover:text-gray-900">
+          <LogOut className="h-5 w-5 mr-2" />
+          <span>Logout</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default Sidebar;
