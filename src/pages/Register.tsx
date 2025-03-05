@@ -11,6 +11,7 @@ const Register = () => {
     password: '',
     confirmPassword: ''
   });
+  
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
@@ -24,7 +25,7 @@ const Register = () => {
       ...prev,
       [name]: value
     }));
-    
+
     // Clear field-specific error when user types
     if (errors[name]) {
       setErrors(prev => ({
@@ -36,39 +37,34 @@ const Register = () => {
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
+
+    if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
+    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
     
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = 'First name is required';
-    }
-    
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
-    }
-    
+
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid';
     }
-    
+
     if (!formData.phone.trim()) {
       newErrors.phone = 'Phone number is required';
     }
-    
+
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 8) {
       newErrors.password = 'Password must be at least 8 characters';
     }
-    
+
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
-    
-    if (!agreeToTerms) {
-      newErrors.terms = 'You must agree to the terms and conditions';
-    }
-    
+
+    if (!agreeToTerms) newErrors.agreeToTerms = 'You must agree to the terms and conditions';
+
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -76,29 +72,41 @@ const Register = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
+
     if (!validate()) {
       return;
     }
-    
+
     try {
       setIsLoading(true);
-      // Here you would typically make an API call to register the user
-      // For now, we'll just simulate a delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simulate successful registration
-      console.log('Registration successful', { 
-        ...formData, 
-        password: '********', 
-        confirmPassword: '********' 
-      });
-      
-      // Redirect to login page or dashboard after successful registration
-      // history.push('/login');
+      const response = await fetch("https://healthcare-backend-a66n.onrender.com/api/users/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          phone: formData.phone,
+          password: formData.password
+        }),
+    });
+
+      const data = await response.json();
+      console.log("Server Response:", data);
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Registration failed');
+      }
+
+      console.log('Registration successful', data);
+
+      // Redirect user to login page after successful registration
+      // history.push('/login'); // Uncomment if using react-router
+      alert('Registration successful! You can now log in.');
+
     } catch (err) {
-      setError('Registration failed. Please try again.');
-      console.error('Registration error:', err);
+      setError(err.message || 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -137,7 +145,7 @@ const Register = () => {
               </div>
             </div>
           )}
-          
+
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
               <div>
