@@ -1,6 +1,8 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Home, Calendar, MessageSquare, Search, FileText, Bell, User, LogOut } from 'lucide-react';
 import SidebarLink from './SidebarLink';
+import localforage from 'localforage';
 
 interface SidebarProps {
   activeTab: string;
@@ -8,6 +10,19 @@ interface SidebarProps {
 }
 
 function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    // Clear token from localStorage
+    localStorage.removeItem('authToken');
+
+    // Clear token from localforage (if used)
+    await localforage.removeItem('authToken');
+
+    // Redirect to login page
+    navigate('/');
+  };
+
   return (
     <div className="hidden md:flex md:flex-col md:w-64 bg-white shadow-md">
       <div className="p-4 border-b">
@@ -58,7 +73,10 @@ function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         />
       </nav>
       <div className="p-4 border-t">
-        <button className="flex items-center text-gray-600 hover:text-gray-900">
+        <button 
+          onClick={handleLogout} 
+          className="flex items-center text-gray-600 hover:text-gray-900 w-full"
+        >
           <LogOut className="h-5 w-5 mr-2" />
           <span>Logout</span>
         </button>

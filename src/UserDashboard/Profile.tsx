@@ -3,7 +3,9 @@ import axios from 'axios';
 import { AuthContext } from '../AuthContext'; // Adjust the import path based on your file structure
 
 function Profile() {
-  const { authToken } = useContext(AuthContext)!; // Use the token from AuthContext
+  const authContext = useContext(AuthContext);
+  const authToken = authContext ? authContext.authToken : null;
+  // Use the token from AuthContext
   const [profile, setProfile] = useState<{
     name: string;
     email: string;
@@ -13,51 +15,61 @@ function Profile() {
     bloodType?: string;
     allergies?: string[];
     medications?: string[];
-    emergencyContact?: string;
-    medicalHistory?: Array<{ title: string; date: string; description: string }>;
+    medicalHistory?: string;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false); // State to toggle edit mode
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    dateOfBirth: '',
-    address: '',
-    bloodType: '',
-    allergies: '',
-    medications: '',
-    emergencyContact: '',
+    name: "",
+    email: "",
+    phone: "",
+    dateOfBirth: "",
+    address: "",
+    bloodType: "",
+    allergies: "",
+    medications: "",
+    medicalHistory: "",
   });
-
+  useEffect(() => {
+    if (profile && !isEditing) { // Prevent override when editing
+      setFormData({
+        name: profile.name || "",
+        email: profile.email || "",
+        phone: profile.phone || "",
+        dateOfBirth: profile.dateOfBirth || "",
+        address: profile.address || "",
+        bloodType: profile.bloodType || "",
+        allergies: profile.allergies?.join(", ") || "",
+        medications: profile.medications?.join(", ") || "",
+        medicalHistory: profile.medicalHistory || "",
+      });
+    }
+  }, [profile, isEditing]); // Only run when profile updates or editing state changes
+  
   // Fetch profile data when the component mounts
   useEffect(() => {
-    if (authToken) {
-      axios.get('https://healthcare-backend-a66n.onrender.com/api/users/profile', {
-        headers: { Authorization: `Bearer ${authToken}` },
-      })
-        .then((response) => {
-          setProfile(response.data);
-          setError(null);
-          // Pre-fill the form with current profile data
-          setFormData({
-            name: response.data.name,
-            email: response.data.email,
-            phone: response.data.phone || '',
-            dateOfBirth: response.data.dateOfBirth || '',
-            address: response.data.address || '',
-            bloodType: response.data.bloodType || '',
-            allergies: response.data.allergies?.join(', ') || '',
-            medications: response.data.medications?.join(', ') || '',
-            emergencyContact: response.data.emergencyContact || '',
-          });
-        })
-        .catch((error) => {
-          console.error('Error fetching profile:', error);
-          setError('Failed to load profile. Please try again later.');
-        });
+    console.log("Auth Token before request:", authToken);
+    if (!authToken) {
+      setError("Authentication token is missing. Please log in again.");
+      return;
     }
+
+    axios.get('https://healthcare-backend-a66n.onrender.com/api/users/profile', {
+      headers: { Authorization: `Bearer ${authToken}` },
+    })
+      .then((response) => {
+        console.log("Profile fetched successfully:", response.data); // Debugging log
+        setProfile(response.data);
+        setError(null);
+      })
+      .catch((error) => {
+        console.error('Error fetching profile:', error);
+        setError('Failed to load profile. Please try again later.');
+      });
   }, [authToken]);
+
+  console.log("Auth Token:", authToken);
+
 
   // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -67,36 +79,68 @@ function Profile() {
       [name]: value,
     });
   };
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+
+    setProfile((prevProfile) => ({
+      ...prevProfile,
+      [name]: ["allergies", "medications", "medicalHistory"].includes(name)
+        ? value?.split(",").map((item) => item.trim()) || [] // Ensure an array is always assigned
+        : value,
+    }));
+  };
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (authToken) {
-      try {
-        const updatedData = {
-          ...formData,
-          allergies: formData.allergies?.split(',').map((item) => item.trim()) ?? [],
-          medications: formData.medications?.split(',').map((item) => item.trim()) ?? [],
-        };
+    if (!authToken) return;
   
-        const response = await axios.put(
-          'https://healthcare-backend-a66n.onrender.com/api/users/update',
-          updatedData,
-          {
-            headers: { Authorization: `Bearer ${authToken}` },
-          }
-        );
+    try {
+      const updatedData = {
+        ...formData,
+        allergies: formData.allergies?.split(",").map((item) => item.trim()) ?? [],
+        medications: formData.medications?.split(",").map((item) => item.trim()) ?? [],
+      };
   
-        setProfile(response.data); // Update the profile with the new data
-        setIsEditing(false); // Exit edit mode
-        setError(null);
-      } catch (error) {
-        console.error('Error updating profile:', error);
-        setError('Failed to update profile. Please try again later.');
-      }
+      const response = await axios.put(
+        "https://healthcare-backend-a66n.onrender.com/api/users/update",
+        updatedData,
+        {
+          headers: { Authorization: `Bearer ${authToken}` },
+        }
+      );
+  
+      console.log("Update response:", response.data);
+  
+      // ✅ Instantly update `profile`
+      setProfile(response.data);
+  
+      // ✅ Sync `formData` with the new profile data
+      setFormData({
+        name: response.data.name || "",
+        email: response.data.email || "",
+        phone: response.data.phone || "",
+        dateOfBirth: response.data.dateOfBirth || "",
+        address: response.data.address || "",
+        bloodType: response.data.bloodType || "",
+        allergies: response.data.allergies?.join(", ") || "",
+        medications: response.data.medications?.join(", ") || "",
+        medicalHistory: response.data.medicalHistory || "",
+      });
+  
+      setIsEditing(false); // Exit edit mode
+      setError(null);
+  
+      // ✅ Refetch profile to ensure data consistency
+      fetchProfile();
+    } catch (error) {
+      console.error("Error updating profile:", error.response?.data || error.message);
+      setError("Failed to update profile. Please try again later.");
     }
   };
-
+  
+  
+  
   if (error) {
     return <div className="text-red-500">{error}</div>; // Display error message
   }
@@ -104,6 +148,30 @@ function Profile() {
   if (!profile) {
     return <div>Loading...</div>; // Show a loading state while fetching data
   }
+  const fetchProfile = async () => {
+    try {
+      if (!authToken) {
+        console.error("No auth token found");
+        return;
+      }
+  
+      const response = await axios.get(
+        "https://healthcare-backend-a66n.onrender.com/api/users/profile",
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+  
+      console.log("Profile Data Fetched:", response.data);
+      setProfile(response.data);
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      setError("Failed to fetch profile. Please try again.");
+    }
+  };
+  
 
   return (
     <div className="space-y-6">
@@ -120,8 +188,8 @@ function Profile() {
               value={formData.name}
               onChange={handleInputChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              required
             />
+
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Email</label>
@@ -131,7 +199,7 @@ function Profile() {
               value={formData.email}
               onChange={handleInputChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              required
+
             />
           </div>
           <div>
@@ -195,11 +263,11 @@ function Profile() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Emergency Contact</label>
+            <label className="block text-sm font-medium text-gray-700">medicalHistory</label>
             <input
               type="text"
-              name="emergencyContact"
-              value={formData.emergencyContact}
+              name="medicalHistory"
+              value={formData.medicalHistory}
               onChange={handleInputChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
@@ -227,9 +295,10 @@ function Profile() {
             <div className="flex items-center mb-6">
               <div className="h-20 w-20 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center font-bold text-2xl">
                 {profile.name
-                  .split(' ')
+                  ?.split(' ') // Ensure profile.name is defined before calling split()
                   .map((part) => part[0])
                   .join('')}
+
               </div>
               <div className="ml-6">
                 <h3 className="text-2xl font-semibold">{profile.name}</h3>
@@ -276,8 +345,8 @@ function Profile() {
                     <p>{profile.medications?.join(', ') || 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Emergency Contact</p>
-                    <p>{profile.emergencyContact || 'N/A'}</p>
+                    <p className="text-sm text-gray-500">medicalHistory</p>
+                    <p>{profile.medicalHistory || 'N/A'}</p>
                   </div>
                 </div>
               </div>
