@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, useParams } from "react-router-dom";
 import { AuthProvider } from "./AuthContext";
 
 // Public Components
@@ -24,12 +24,33 @@ import Doctors from "./UserDashboard/Doctors";
 import MedicalRecords from "./UserDashboard/MedicalRecords";
 import Notifications from "./UserDashboard/Notifications";
 import Profile from "./UserDashboard/Profile";
+import DoctorProfile from "./UserDashboard/DoctorsProfile";
 
 function UserDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [chatOpen, setChatOpen] = useState(false);
+  const { doctorId } = useParams(); // ✅ Get doctorId from URL
+
+  useEffect(() => {
+    if (doctorId && !selectedDoctor) {
+      // ✅ Fetch doctor details if not already set
+      const fetchDoctor = async () => {
+        try {
+          const response = await fetch(`https://healthcare-backend-a66n.onrender.com/api/doctors/${doctorId}`);
+          const data = await response.json();
+          if (data) {
+            setSelectedDoctor(data);
+            setActiveTab("doctorprofile"); // ✅ Set active tab
+          }
+        } catch (error) {
+          console.error("Error fetching doctor details:", error);
+        }
+      };
+      fetchDoctor();
+    }
+  }, [doctorId, selectedDoctor]);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -40,14 +61,23 @@ function UserDashboard() {
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       <MobileHeader mobileMenuOpen={mobileMenuOpen} toggleMobileMenu={toggleMobileMenu} />
       <MobileMenu activeTab={activeTab} setActiveTab={setActiveTab} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
-      <div className="flex-1 md:ml-64 p-6 md:p-8 mt-16 md:mt-0">
-        {activeTab === "dashboard" && <Dashboard setActiveTab={setActiveTab} />}
-        {activeTab === "appointments" && <Appointments />}
-        {activeTab === "messages" && <Messages />}
-        {activeTab === "doctors" && <Doctors setActiveTab={setActiveTab} setSelectedDoctor={setSelectedDoctor} setChatOpen={setChatOpen} />}
-        {activeTab === "records" && <MedicalRecords />}
-        {activeTab === "notifications" && <Notifications />}
-        {activeTab === "profile" && <Profile />}
+
+      <div className="w-full p-6 md:p-8 mt-20 md:mt-0">
+        {doctorId && selectedDoctor ? (
+          <DoctorProfile doctor={selectedDoctor} />
+        ) : (
+          <>
+            {activeTab === "dashboard" && <Dashboard setActiveTab={setActiveTab} />}
+            {activeTab === "appointments" && <Appointments />}
+            {activeTab === "messages" && <Messages />}
+            {activeTab === "doctors" && (
+              <Doctors setActiveTab={setActiveTab} setSelectedDoctor={setSelectedDoctor} setChatOpen={setChatOpen} />
+            )}
+            {activeTab === "records" && <MedicalRecords />}
+            {activeTab === "notifications" && <Notifications />}
+            {activeTab === "profile" && <Profile />}
+          </>
+        )}
       </div>
     </div>
   );
@@ -74,7 +104,8 @@ function App() {
             />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/dashboard" element={<UserDashboard />} />
+            <Route path="/dashboard/*" element={<UserDashboard />} /> {/* ✅ Handles all dashboard routes */}
+            <Route path="/doctorprofile/:doctorId" element={<UserDashboard />} /> {/* ✅ Doctor Profile now inside UserDashboard */}
           </Routes>
           <Footer />
         </div>
