@@ -25,6 +25,7 @@ import MedicalRecords from "./UserDashboard/MedicalRecords";
 import Notifications from "./UserDashboard/Notifications";
 import Profile from "./UserDashboard/Profile";
 import DoctorProfile from "./UserDashboard/DoctorsProfile";
+import Pricing from "./components/Pricing";
 
 function UserDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -97,6 +98,7 @@ function App() {
                 <Hero />
                 <Services />
                 <Features />
+                <Pricing />
                 <Testimonials />
                 <CallToAction />
                 <Footer /> {/* ✅ Only shown on public pages */}
