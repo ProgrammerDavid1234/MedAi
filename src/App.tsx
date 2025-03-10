@@ -87,28 +87,29 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen bg-white">
-          <Navbar />
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <>
-                  <Hero />
-                  <Services />
-                  <Features />
-                  <Testimonials />
-                  <CallToAction />
-                </>
-              }
-            />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/dashboard/*" element={<UserDashboard />} /> {/* ✅ Handles all dashboard routes */}
-            <Route path="/doctorprofile/:doctorId" element={<UserDashboard />} /> {/* ✅ Doctor Profile now inside UserDashboard */}
-          </Routes>
-          <Footer />
-        </div>
+        <Routes>
+          {/* Public Routes */}
+          <Route
+            path="/"
+            element={
+              <>
+                <Navbar /> {/* ✅ Only shown on public pages */}
+                <Hero />
+                <Services />
+                <Features />
+                <Testimonials />
+                <CallToAction />
+                <Footer /> {/* ✅ Only shown on public pages */}
+              </>
+            }
+          />
+          <Route path="/login" element={<><Navbar /><Login /><Footer /></>} />
+          <Route path="/register" element={<><Navbar /><Register /><Footer /></>} />
+
+          {/* Dashboard Routes - NO NAVBAR OR FOOTER */}
+          <Route path="/dashboard/*" element={<UserDashboard />} />
+          <Route path="/doctorprofile/:doctorId" element={<UserDashboard />} />
+        </Routes>
       </Router>
     </AuthProvider>
   );

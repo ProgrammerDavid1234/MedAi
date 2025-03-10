@@ -1,6 +1,6 @@
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { AuthContext } from "../AuthContext";
+import { useAuth } from "../AuthContext";  // ✅ Use `useAuth`
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 const Login = () => {
@@ -11,7 +11,7 @@ const Login = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const { login } = useContext(AuthContext)!;
+  const { login } = useAuth();  // ✅ Correct way to access context
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -26,7 +26,6 @@ const Login = () => {
     try {
       setIsLoading(true);
 
-      // Simulated API call (Replace with actual API request)
       const response = await fetch("https://healthcare-backend-a66n.onrender.com/api/users/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -39,10 +38,8 @@ const Login = () => {
         throw new Error(data.message || "Invalid email or password");
       }
 
-      // Save token and remember user
-      login(email, data.token, rememberMe);
+      login(data.user.id, data.token, rememberMe);  // ✅ Call login with correct data
 
-      // Redirect user to dashboard
       navigate("/dashboard");
     } catch (err: any) {
       setError(err.message || "Something went wrong");
@@ -59,7 +56,6 @@ const Login = () => {
         {error && <p className="mt-4 text-red-500 text-center">{error}</p>}
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-          {/* Email Field */}
           <div>
             <label className="block text-sm font-medium text-gray-700">Email address</label>
             <div className="relative mt-1">
@@ -75,7 +71,6 @@ const Login = () => {
             </div>
           </div>
 
-          {/* Password Field */}
           <div>
             <label className="block text-sm font-medium text-gray-700">Password</label>
             <div className="relative mt-1">
@@ -98,7 +93,6 @@ const Login = () => {
             </div>
           </div>
 
-          {/* Remember Me & Forgot Password */}
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <input
@@ -114,7 +108,6 @@ const Login = () => {
             </Link>
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={isLoading}

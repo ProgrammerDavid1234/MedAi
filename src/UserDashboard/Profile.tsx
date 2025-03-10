@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
-import { AuthContext } from '../AuthContext'; // Adjust the import path based on your file structure
+import { useAuth } from "../AuthContext";
 
 function Profile() {
-  const authContext = useContext(AuthContext);
+  const authContext = useAuth();
   const authToken = authContext ? authContext.authToken : null;
   // Use the token from AuthContext
   const [profile, setProfile] = useState<{
