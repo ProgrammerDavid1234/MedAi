@@ -26,7 +26,7 @@ function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
   return (
     <div className="hidden md:flex md:flex-col md:w-64 bg-white shadow-md">
       <div className="p-4 border-b">
-        <h1 className="text-xl font-bold text-blue-600">MedConnect</h1>
+        <h1 className="text-xl font-bold text-blue-600">Curease</h1>
       </div>
       <nav className="flex-1 p-4 space-y-2">
         <SidebarLink 

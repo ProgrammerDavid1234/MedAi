@@ -9,7 +9,7 @@ const Footer = () => {
           <div>
             <div className="flex items-center mb-4">
               <Heart className="h-8 w-8 text-blue-400" />
-              <span className="ml-2 text-xl font-bold">HealthCare</span>
+              <span className="ml-2 text-xl font-bold">CurEase</span>
             </div>
             <p className="text-gray-400 mb-4">
               Providing quality healthcare services for over 15 years. Your health is our priority.
