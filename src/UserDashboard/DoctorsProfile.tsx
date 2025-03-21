@@ -25,7 +25,7 @@ const DoctorProfile: React.FC<{ doctor: Doctor }> = ({ doctor }) => {
       {/* 🔙 Back Button */}
       <button
         onClick={() => navigate(-1)}
-        className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition"
+        className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-301 transition"
       >
         ← Back
       </button>

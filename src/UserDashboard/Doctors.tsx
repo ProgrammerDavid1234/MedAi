@@ -100,7 +100,7 @@ function Doctors({ setActiveTab, setSelectedDoctor, setChatOpen }: DoctorsProps)
                   onClick={() => console.log('Book appointment with:', doctor._id)}
                   className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
                 >
-                  Book Appointment
+                  Book Appointment(S)
                 </button>
                 <button
                   onClick={() => {
