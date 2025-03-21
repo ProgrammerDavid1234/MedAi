@@ -10,7 +10,7 @@ const CallToAction = () => {
               Ready to prioritize your health?
             </h2>
             <p className="mt-3 text-lg text-blue-100 max-w-3xl">
-              Schedule an appointment today and take the first step towards better health. Our team of healthcare professionals is ready to provide you with the care you deserve.
+              Schedule an appointment today and take the first step towards better health. Our team of healthcare professionals is ready to provide you with the care you deserve 24/7.
             </p>
           </div>
           <div className="md:w-1/3 md:text-right">
