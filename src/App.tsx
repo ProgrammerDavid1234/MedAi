@@ -129,7 +129,7 @@ function App() {
           <Route path="/dashboard/*" element={<UserDashboard />} />
           <Route path="/doctorprofile/:doctorId" element={<UserDashboard />} />
           <Route path="/subscription" element={<Subscription />} />
-          <Route path="/success" element={<Success />} />
+          <Route path="/success" element={<><Navbar /><Success /><Footer /></>} />
 
 
         </Routes>

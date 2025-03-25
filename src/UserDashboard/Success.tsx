@@ -1,40 +1,33 @@
 import { useEffect } from "react";
-import { useAuth } from "../AuthContext";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const Success = () => {
-  const { authToken, setUser } = useAuth();
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const sessionId = searchParams.get("session_id"); // Get session ID from URL
+  const navigate = useNavigate();
+  const sessionId = searchParams.get("session_id");
 
   useEffect(() => {
-    const fetchUpdatedUser = async () => {
-      if (!authToken) return;
-
-      try {
-        // Fetch latest user data
-        const response = await axios.get("https://healthcare-backend-a66n.onrender.com/api/auth/me", {
-          headers: { Authorization: `Bearer ${authToken}` },
-        });
-
-        setUser(response.data); // ✅ Update subscription status
-        navigate("/dashboard"); // ✅ Redirect to dashboard
-      } catch (error) {
-        console.error("Error fetching updated user:", error);
-      }
-    };
-
     if (sessionId) {
-      fetchUpdatedUser(); // Fetch updated subscription info
+      // Call backend to confirm payment
+      axios
+        .post("https://healthcare-backend-a66n.onrender.com/api/stripe/confirm-payment", { sessionId })
+        .then((res) => {
+          toast.success("Payment successful! Subscription activated.");
+          setTimeout(() => navigate("/dashboard"), 3000); // Redirect after 3s
+        })
+        .catch((err) => {
+          console.error("Payment verification failed:", err);
+          toast.error("Failed to verify payment. Please contact support.");
+        });
     }
-  }, [authToken, navigate, setUser, sessionId]);
+  }, [sessionId, navigate]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <h1 className="text-2xl font-bold text-green-600">Payment Successful! 🎉</h1>
-      <p>Redirecting you to your dashboard...</p>
+    <div style={{ textAlign: "center", padding: "50px" }}>
+      <h2>✅ Payment Successful! 🎉</h2>
+      <p>We're verifying your subscription. Please wait...</p>
     </div>
   );
 };
