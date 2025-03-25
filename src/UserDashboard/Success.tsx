@@ -9,19 +9,26 @@ const Success = () => {
   const sessionId = searchParams.get("session_id");
 
   useEffect(() => {
-    if (sessionId) {
-      // Call backend to confirm payment
-      axios
-        .post("https://healthcare-backend-a66n.onrender.com/api/stripe/confirm-payment", { sessionId })
-        .then((res) => {
-          toast.success("Payment successful! Subscription activated.");
-          setTimeout(() => navigate("/dashboard"), 3000); // Redirect after 3s
-        })
-        .catch((err) => {
-          console.error("Payment verification failed:", err);
-          toast.error("Failed to verify payment. Please contact support.");
-        });
+    if (!sessionId) {
+      toast.error("No session ID found. Redirecting...");
+      setTimeout(() => navigate("/dashboard"), 3000);
+      return;
     }
+
+    console.log("Verifying Payment for Session:", sessionId);
+
+    axios
+      .post("https://healthcare-backend-a66n.onrender.com/api/stripe/confirm-payment", { sessionId })
+      .then((res) => {
+        console.log("Payment Confirmed:", res.data);
+        toast.success("Payment successful! Subscription activated.");
+        setTimeout(() => navigate("/dashboard"), 3000);
+      })
+      .catch((err) => {
+        console.error("Payment verification failed:", err);
+        toast.error("Failed to verify payment. Redirecting...");
+        setTimeout(() => navigate("/dashboard"), 3000);
+      });
   }, [sessionId, navigate]);
 
   return (
