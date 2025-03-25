@@ -18,7 +18,7 @@ const Success = () => {
     console.log("Verifying Payment for Session:", sessionId);
 
     axios
-      .post("https://healthcare-backend-a66n.onrender.com/api/stripe/confirm-payment", { sessionId })
+      .post("https://healthcare-backend-a66n.onrender.com/api/subscription/confirm-payment", { sessionId })
       .then((res) => {
         console.log("Payment Confirmed:", res.data);
         toast.success("Payment successful! Subscription activated.");
