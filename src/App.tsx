@@ -29,6 +29,7 @@ import Profile from "./UserDashboard/Profile";
 import DoctorProfile from "./UserDashboard/DoctorsProfile";
 import Pricing from "./components/Pricing";
 import Subscription from "./UserDashboard/Subscription";
+import Success from "./UserDashboard/Success";
 
 
 function UserDashboard() {
@@ -128,6 +129,8 @@ function App() {
           <Route path="/dashboard/*" element={<UserDashboard />} />
           <Route path="/doctorprofile/:doctorId" element={<UserDashboard />} />
           <Route path="/subscription" element={<Subscription />} />
+          <Route path="/success" element={<Success />} />
+
 
         </Routes>
       </Router>
