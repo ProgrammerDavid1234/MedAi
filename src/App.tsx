@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, useParams } from "react-router-dom";
 import { AuthProvider } from "./AuthContext";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // Public Components
 import Navbar from "./components/Navbar";
@@ -26,6 +28,8 @@ import Notifications from "./UserDashboard/Notifications";
 import Profile from "./UserDashboard/Profile";
 import DoctorProfile from "./UserDashboard/DoctorsProfile";
 import Pricing from "./components/Pricing";
+import Subscription from "./UserDashboard/Subscription";
+
 
 function UserDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -88,6 +92,18 @@ function App() {
   return (
     <AuthProvider>
       <Router>
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={true}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="colored" // ✅ Makes it more vibrant
+        />
         <Routes>
           {/* Public Routes */}
           <Route
@@ -111,6 +127,8 @@ function App() {
           {/* Dashboard Routes - NO NAVBAR OR FOOTER */}
           <Route path="/dashboard/*" element={<UserDashboard />} />
           <Route path="/doctorprofile/:doctorId" element={<UserDashboard />} />
+          <Route path="/subscription" element={<Subscription />} />
+
         </Routes>
       </Router>
     </AuthProvider>
