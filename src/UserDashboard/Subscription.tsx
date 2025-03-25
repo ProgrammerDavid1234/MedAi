@@ -14,29 +14,30 @@ const Subscription: React.FC = () => {
       navigate("/login");
       return;
     }
-
+  
     try {
-        const response = await axios.post(
-          "https://healthcare-backend-a66n.onrender.com/api/subscription/subscribe",
-          { plan },
-          {
-            headers: { Authorization: `Bearer ${authToken}` },
-          }
-        );
-      
-        console.log("Subscription Response:", response.data); // ✅ Debugging
-      
-        if (response.data.checkoutUrl) {
-          window.location.href = response.data.checkoutUrl; // ✅ Redirect to Stripe
-        } else {
-          toast.error("❌ Subscription failed. Try again.");
+      const response = await axios.post(
+        "https://healthcare-backend-a66n.onrender.com/api/subscription/subscribe",
+        { plan },
+        {
+          headers: { Authorization: `Bearer ${authToken}` },
         }
-      } catch (error) {
+      );
+  
+      console.log("Subscription Response:", response.data); // ✅ Debugging
+  
+      if (response.data.checkoutUrl) {
+        console.log("Redirecting to:", response.data.checkoutUrl); // ✅ Log URL before redirecting
+        window.location.href = response.data.checkoutUrl; // ✅ Redirect to Stripe
+      } else {
         toast.error("❌ Subscription failed. Try again.");
       }
-      
-      
-    };
+    } catch (error) {
+      console.error("Subscription error:", error);
+      toast.error("❌ Subscription failed. Try again.");
+    }
+  };
+  
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center px-6 py-12">
