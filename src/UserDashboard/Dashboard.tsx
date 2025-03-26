@@ -39,7 +39,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
         return 0;
     }
   };
-
+  
   useEffect(() => {
     if (!authToken || !userId) {
       console.warn("⚠️ No user found, redirecting to login...");
@@ -53,37 +53,37 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
 
   const fetchUserData = async () => {
     try {
-      // Fetch User Profile
+      // Fetch User Profile (includes subscription info)
       const userResponse = await axios.get(
-        `https://healthcare-backend-a66n.onrender.com/api/user/${userId}`,
+        `https://healthcare-backend-a66n.onrender.com/api/users/profile`,
         {
           headers: { Authorization: `Bearer ${authToken}` },
         }
       );
-
-      // Fetch Subscription Status
-      const subscriptionResponse = await axios.get(
-        `https://healthcare-backend-a66n.onrender.com/api/subscription/status`,
-        {
-          headers: { Authorization: `Bearer ${authToken}` },
-        }
-      );
-
-      console.log("User Data:", userResponse.data);
-      console.log("Subscription Status:", subscriptionResponse.data);
-
+  
+      console.log("User Profile Data:", userResponse.data);
+  
+      // Extract user details
+      const userId = userResponse.data._id; // Extract user ID
+      const subscription = userResponse.data.subscription || {};
+      const subscriptionPlan = subscription.plan || "No Plan";
+      const subscriptionStatus = subscription.status || "inactive";
+      const subscriptionPrice = getPlanPrice(subscriptionPlan); // Function to get price
+  
+      // Save user data (including userId)
       setUserData({
-        ...userResponse.data,
-        subscriptionStatus: subscriptionResponse.data.subscriptionStatus,
-        subscriptionPlan: subscriptionResponse.data.subscriptionPlan,
-        subscriptionPrice: getPlanPrice(subscriptionResponse.data.subscriptionPlan), // Function to get price
+        userId, // Store user ID
+        subscriptionPlan,
+        subscriptionStatus,
+        subscriptionPrice,
       });
-
+  
     } catch (error) {
-      console.error("Error fetching user data:", error);
+      console.error("Error fetching user profile data:", error);
     }
   };
-
+  
+  
 
   const fetchDashboardData = async () => {
     try {
