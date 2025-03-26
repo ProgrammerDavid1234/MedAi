@@ -2,23 +2,23 @@ import { useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { useAuth } from "../AuthContext"; // 🔥 Import AuthContext hook
 
 const Success = () => {
+  const { authToken } = useAuth(); // 🔥 Get token from context
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const sessionId = searchParams.get("session_id");
 
   useEffect(() => {
-    if (sessionId) {
-      const token = localStorage.getItem("token"); // 🔥 Get token from local storage
-  
+    if (sessionId && authToken) {
       axios
         .post(
           "https://healthcare-backend-a66n.onrender.com/api/subscription/confirm-payment",
           { sessionId },
           {
             headers: {
-              Authorization: `Bearer ${token}`, // 🔥 Send token in headers
+              Authorization: `Bearer ${authToken}`, // 🔥 Use token from context
             },
           }
         )
@@ -31,8 +31,7 @@ const Success = () => {
           toast.error("Failed to verify payment. Please contact support.");
         });
     }
-  }, [sessionId, navigate]);
-  
+  }, [sessionId, authToken, navigate]);
 
   return (
     <div style={{ textAlign: "center", padding: "50px" }}>
