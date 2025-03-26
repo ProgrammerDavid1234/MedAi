@@ -27,6 +27,18 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
 
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
+  const getPlanPrice = (plan: string) => {
+    switch (plan) {
+      case "basic":
+        return 9.99;
+      case "pro":
+        return 19.99;
+      case "enterprise":
+        return 49.99;
+      default:
+        return 0;
+    }
+  };
 
   useEffect(() => {
     if (!authToken || !userId) {
@@ -41,15 +53,37 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
 
   const fetchUserData = async () => {
     try {
-      const response = await axios.get(`https://healthcare-backend-a66n.onrender.com/api/user/${userId}`, {
-        headers: { Authorization: `Bearer ${authToken}` },
+      // Fetch User Profile
+      const userResponse = await axios.get(
+        `https://healthcare-backend-a66n.onrender.com/api/user/${userId}`,
+        {
+          headers: { Authorization: `Bearer ${authToken}` },
+        }
+      );
+
+      // Fetch Subscription Status
+      const subscriptionResponse = await axios.get(
+        `https://healthcare-backend-a66n.onrender.com/api/subscription/status`,
+        {
+          headers: { Authorization: `Bearer ${authToken}` },
+        }
+      );
+
+      console.log("User Data:", userResponse.data);
+      console.log("Subscription Status:", subscriptionResponse.data);
+
+      setUserData({
+        ...userResponse.data,
+        subscriptionStatus: subscriptionResponse.data.subscriptionStatus,
+        subscriptionPlan: subscriptionResponse.data.subscriptionPlan,
+        subscriptionPrice: getPlanPrice(subscriptionResponse.data.subscriptionPlan), // Function to get price
       });
-      console.log("User Data:", response.data);
-      setUserData(response.data);
+
     } catch (error) {
       console.error("Error fetching user data:", error);
     }
   };
+
 
   const fetchDashboardData = async () => {
     try {
