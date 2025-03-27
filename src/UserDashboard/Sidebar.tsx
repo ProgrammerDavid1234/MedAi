@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home, Calendar, MessageSquare, Search, FileText, Bell, User, LogOut } from 'lucide-react';
+import { Home, Calendar, MessageSquare, Search, FileText, Bell, User, LogOut, ShoppingBag } from 'lucide-react';
 import SidebarLink from './SidebarLink';
 import localforage from 'localforage';
 
@@ -70,6 +70,13 @@ function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
           label="Profile" 
           active={activeTab === 'profile'} 
           onClick={() => setActiveTab('profile')} 
+        />
+        {/* ✅ New Pharmacy Tab */}
+        <SidebarLink 
+          icon={<ShoppingBag />} 
+          label="Pharmacy" 
+          active={activeTab === 'pharmacy'} 
+          onClick={() => setActiveTab('pharmacy')} 
         />
       </nav>
       <div className="p-4 border-t">

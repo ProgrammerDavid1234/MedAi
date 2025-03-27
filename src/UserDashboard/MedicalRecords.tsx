@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { Upload } from 'lucide-react';
-import axios from 'axios';
-import { useAuth } from '../AuthContext';
+import React, { useEffect, useState } from "react";
+import { Upload } from "lucide-react";
+import axios from "axios";
+import { useAuth } from "../AuthContext";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function MedicalRecords() {
   const { authToken, userId } = useAuth();
@@ -23,7 +25,7 @@ function MedicalRecords() {
       );
       setMedicalRecords(response.data);
     } catch (error) {
-      console.error('Failed to fetch medical records:', error);
+      toast.error("Failed to fetch medical records.");
     }
   };
 
@@ -35,14 +37,14 @@ function MedicalRecords() {
   // Upload Medical Record
   const handleUpload = async () => {
     if (!selectedFile) {
-      alert("Please select a file to upload.");
+      toast.warn("Please select a file to upload.");
       return;
     }
 
     try {
       const formData = new FormData();
       formData.append("file", selectedFile);
-      formData.append("userId", userId); // Attach user ID if needed
+      formData.append("userId", userId);
 
       await axios.post(
         `https://healthcare-backend-a66n.onrender.com/api/uploadMedicalRecord`,
@@ -56,11 +58,10 @@ function MedicalRecords() {
       );
 
       setSelectedFile(null);
-      fetchMedicalRecords(); // Refresh the list after upload
-      alert("Medical record uploaded successfully!");
+      fetchMedicalRecords(); // Refresh list after upload
+      toast.success("Medical record uploaded successfully!");
     } catch (error) {
-      console.error('Failed to upload medical record:', error);
-      alert("Upload failed. Please try again.");
+      toast.error("Upload failed. Please try again.");
     }
   };
 
@@ -73,9 +74,10 @@ function MedicalRecords() {
           headers: { Authorization: `Bearer ${authToken}` },
         }
       );
-      setMedicalRecords(medicalRecords.filter(record => record.id !== id));
+      setMedicalRecords(medicalRecords.filter((record) => record.id !== id));
+      toast.success("Medical record deleted successfully.");
     } catch (error) {
-      console.error('Failed to delete medical record:', error);
+      toast.error("Failed to delete medical record.");
     }
   };
 
@@ -83,7 +85,7 @@ function MedicalRecords() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Medical Records</h2>
-        
+
         <div className="flex items-center space-x-4">
           {/* File Input */}
           <input type="file" onChange={handleFileChange} className="border p-1" />
@@ -106,7 +108,7 @@ function MedicalRecords() {
           <div className="w-1/3">Actions</div>
         </div>
         <div className="divide-y divide-gray-200">
-          {medicalRecords.map(record => (
+          {medicalRecords.map((record) => (
             <div key={record.id} className="flex p-4 items-center">
               <div className="w-1/3">
                 <p className="font-medium">{record.title}</p>
@@ -118,7 +120,12 @@ function MedicalRecords() {
               <div className="w-1/3 space-x-3">
                 <button className="text-blue-500 hover:text-blue-700">View</button>
                 <button className="text-green-500 hover:text-green-700">Download</button>
-                <button onClick={() => handleDelete(record.id)} className="text-red-500 hover:text-red-700">Delete</button>
+                <button
+                  onClick={() => handleDelete(record.id)}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  Delete
+                </button>
               </div>
             </div>
           ))}

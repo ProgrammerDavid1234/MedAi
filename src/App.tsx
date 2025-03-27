@@ -30,6 +30,8 @@ import DoctorProfile from "./UserDashboard/DoctorsProfile";
 import Pricing from "./components/Pricing";
 import Subscription from "./UserDashboard/Subscription";
 import Success from "./UserDashboard/Success";
+import Pharmacy from './UserDashboard/Pharmacy';
+
 
 
 function UserDashboard() {
@@ -82,6 +84,7 @@ function UserDashboard() {
             {activeTab === "records" && <MedicalRecords />}
             {activeTab === "notifications" && <Notifications />}
             {activeTab === "profile" && <Profile />}
+            {activeTab === "pharmacy" && <Pharmacy /> }
           </>
         )}
       </div>
@@ -130,6 +133,8 @@ function App() {
           <Route path="/doctorprofile/:doctorId" element={<UserDashboard />} />
           <Route path="/subscription" element={<Subscription />} />
           <Route path="/success" element={<><Navbar /><Success /><Footer /></>} />
+          {/* <Route path="/pharmacy" element={<Pharmacy />} /> */}
+
 
 
         </Routes>
