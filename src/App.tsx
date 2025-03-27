@@ -31,6 +31,7 @@ import Pricing from "./components/Pricing";
 import Subscription from "./UserDashboard/Subscription";
 import Success from "./UserDashboard/Success";
 import Pharmacy from './UserDashboard/Pharmacy';
+import ChatPage from "./UserDashboard/ChatPage";
 
 
 
@@ -85,6 +86,8 @@ function UserDashboard() {
             {activeTab === "notifications" && <Notifications />}
             {activeTab === "profile" && <Profile />}
             {activeTab === "pharmacy" && <Pharmacy /> }
+            {activeTab === "chat" && <ChatPage /> }
+
           </>
         )}
       </div>
