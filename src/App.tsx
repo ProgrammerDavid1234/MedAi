@@ -85,9 +85,10 @@ function UserDashboard() {
             {activeTab === "records" && <MedicalRecords />}
             {activeTab === "notifications" && <Notifications />}
             {activeTab === "profile" && <Profile />}
-            {activeTab === "pharmacy" && <Pharmacy /> }
-            {activeTab === "chat" && <ChatPage /> }
+            {activeTab === "pharmacy" && <Pharmacy />}
 
+            {/* ✅ Ensure chat page receives the selected doctor */}
+            {activeTab === "chat" && selectedDoctor && <ChatPage doctor={selectedDoctor} />}
           </>
         )}
       </div>

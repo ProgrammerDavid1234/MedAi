@@ -78,12 +78,12 @@ function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
           active={activeTab === 'pharmacy'}
           onClick={() => setActiveTab('pharmacy')}
         />
-        <SidebarLink
+        {/* <SidebarLink
           icon={<MessageSquare />}
           label="Chat with Doctor"
           active={activeTab === 'chat'}
           onClick={() => setActiveTab('chat')}
-        />
+        /> */}
 
       </nav>
       <div className="p-4 border-t">

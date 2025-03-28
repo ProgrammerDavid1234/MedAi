@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Search, Star } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useAuth } from '../AuthContext';
 
 interface Doctor {
-  _id: string; // ✅ Correct field
+  _id: string;
   name: string;
   specialization: string;
   rating: number;
-
 }
 
 interface DoctorsProps {
@@ -16,7 +17,9 @@ interface DoctorsProps {
   setChatOpen: (open: boolean) => void;
 }
 
-function Doctors({ setActiveTab, setSelectedDoctor, setChatOpen }: DoctorsProps) {
+const Doctors: React.FC<DoctorsProps> = ({ setActiveTab, setSelectedDoctor, setChatOpen }) => {
+  const { authToken } = useAuth();
+  const navigate = useNavigate();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
@@ -25,15 +28,8 @@ function Doctors({ setActiveTab, setSelectedDoctor, setChatOpen }: DoctorsProps)
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        const response = await fetch("https://healthcare-backend-a66n.onrender.com/api/doctors/available");
-        const data = await response.json();
-        console.log("API Response:", data);
-
-        if (Array.isArray(data.doctors)) {
-          setDoctors(data.doctors);
-        } else {
-          throw new Error("Invalid API response format.");
-        }
+        const res = await axios.get("https://healthcare-backend-a66n.onrender.com/api/doctors/available");
+        setDoctors(res.data.doctors || []);
       } catch (error) {
         console.error("Error fetching doctors:", error);
         setError("Failed to load doctors. Please try again later.");
@@ -45,7 +41,13 @@ function Doctors({ setActiveTab, setSelectedDoctor, setChatOpen }: DoctorsProps)
     fetchDoctors();
   }, []);
 
-  const filteredDoctors = doctors.filter(doctor =>
+  // Navigate to chat page
+  const startChat = (doctorId: string) => {
+    navigate(`/dashboard/chat/${doctorId}`);
+  };
+
+  // Filter doctors based on search input
+  const filteredDoctors = doctors.filter((doctor) =>
     doctor.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -54,8 +56,9 @@ function Doctors({ setActiveTab, setSelectedDoctor, setChatOpen }: DoctorsProps)
 
   return (
     <div className="space-y-6">
+      {/* Search Bar */}
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Specialization</h2>
+        <h2 className="text-xl font-semibold">Doctors</h2>
         <div className="relative">
           <input
             type="text"
@@ -68,10 +71,12 @@ function Doctors({ setActiveTab, setSelectedDoctor, setChatOpen }: DoctorsProps)
         </div>
       </div>
 
+      {/* Doctor List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredDoctors.map((doctor) => (
           <div key={doctor._id} className="bg-white rounded-lg shadow overflow-hidden">
             <div className="p-6">
+              {/* Doctor Info */}
               <div className="flex items-center mb-4">
                 <div className="h-16 w-16 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center font-bold text-xl">
                   {doctor.name.charAt(0)}
@@ -82,39 +87,45 @@ function Doctors({ setActiveTab, setSelectedDoctor, setChatOpen }: DoctorsProps)
                 </div>
               </div>
 
+              {/* Rating */}
               <div className="flex items-center mb-4">
                 <div className="flex text-yellow-400">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4" fill={i < Math.floor(doctor.rating) ? "currentColor" : "none"} />
+                    <Star
+                      key={i}
+                      className="h-4 w-4"
+                      fill={i < Math.floor(doctor.rating) ? "currentColor" : "none"}
+                    />
                   ))}
                 </div>
                 <span className="ml-2 text-sm text-gray-500">{doctor.rating}</span>
               </div>
 
-              <p className="text-sm text-gray-600 mb-4">
-                <span className="font-medium">Specialization:</span> {doctor.specialization}
-              </p>
-
+              {/* Actions */}
               <div className="flex space-x-2">
+                {/* Book Appointment Button */}
                 <button
                   onClick={() => console.log('Book appointment with:', doctor._id)}
                   className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
                 >
                   Book Appointment
                 </button>
+
+                {/* Message Button (Opens Chat) */}
                 <button
                   onClick={() => {
-                    setSelectedDoctor(doctor);
-                    setChatOpen(true);
-                    setActiveTab('messages');
+                    setSelectedDoctor(doctor); // Store the selected doctor
+                    setActiveTab("chat"); // Switch to chat tab
                   }}
                   className="flex-1 border border-blue-500 text-blue-500 px-4 py-2 rounded-md hover:bg-blue-50 transition"
                 >
                   Message
                 </button>
+
               </div>
             </div>
 
+            {/* View Full Profile */}
             <div className="bg-gray-50 px-6 py-4">
               <Link to={`/doctorprofile/${doctor._id}`}>
                 <button
@@ -133,6 +144,6 @@ function Doctors({ setActiveTab, setSelectedDoctor, setChatOpen }: DoctorsProps)
       </div>
     </div>
   );
-}
+};
 
 export default Doctors;
