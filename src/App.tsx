@@ -137,6 +137,8 @@ function App() {
           <Route path="/doctorprofile/:doctorId" element={<UserDashboard />} />
           <Route path="/subscription" element={<Subscription />} />
           <Route path="/success" element={<><Navbar /><Success /><Footer /></>} />
+          <Route path="/chat/:id" element={<ChatPage />} />
+
           {/* <Route path="/pharmacy" element={<Pharmacy />} /> */}
 
 

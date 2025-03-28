@@ -41,6 +41,7 @@ const Appointments: React.FC = () => {
   const navigate = useNavigate();
 
 
+  const API_URL = "https://healthcare-backend-a66n.onrender.com/api"; // Ensure this matches your backend URL
 
 
 
@@ -95,7 +96,7 @@ const Appointments: React.FC = () => {
         { plan },
         { headers: { Authorization: `Bearer ${authToken}` } }
       );
-  
+
       if (response.data.url) {
         window.location.href = response.data.url; // Redirect to Stripe Checkout
       }
@@ -104,7 +105,7 @@ const Appointments: React.FC = () => {
       alert("Failed to start subscription. Please try again.");
     }
   };
-  
+
 
   useEffect(() => {
     const fetchDoctors = async () => {
@@ -155,17 +156,17 @@ const Appointments: React.FC = () => {
           )
         );
 
-        alert("Appointment rescheduled successfully!");
+        toast.success("Appointment rescheduled successfully!");
       } else {
         console.error("Unexpected reschedule API response:", response.data);
-        alert("Failed to reschedule appointment. Please try again.");
+        toast.error("Failed to reschedule appointment. Please try again.");
       }
 
       setRescheduleMode(false);
       setSelectedAppointment(null);
     } catch (err) {
       console.error("Error rescheduling appointment:", err);
-      alert("Failed to reschedule appointment.");
+      toast.error("Failed to reschedule appointment.");
     }
   };
   const bookAppointment = async () => {
@@ -173,12 +174,12 @@ const Appointments: React.FC = () => {
       toast.error("Please fill in all required fields.");
       return;
     }
-  
+
     try {
       const response = await axios.post(
         "https://healthcare-backend-a66n.onrender.com/api/appointments/appointments",
         {
-          userId: userId, 
+          userId: userId,
           doctorName,
           date: appointmentDate,
           time: appointmentTime,
@@ -186,7 +187,7 @@ const Appointments: React.FC = () => {
         },
         { headers: { Authorization: `Bearer ${authToken}` } }
       );
-  
+
       if (response.data && response.status === 201) {
         toast.success("Appointment booked successfully!");
         setShowBookModal(false);
@@ -194,13 +195,13 @@ const Appointments: React.FC = () => {
       }
     } catch (error) {
       console.error("Error booking appointment:", error);
-  
+
       if (error.response?.status === 403) {
         // User reached free limit, show upgrade message
         const toastId = toast.error("You've reached your free limit. Upgrade to continue.", {
           autoClose: 3000, // Close after 3 seconds
         });
-  
+
         // Redirect to subscription page after toast closes
         toast.onChange((payload) => {
           if (payload.id === toastId && payload.status === "removed") {
@@ -212,7 +213,7 @@ const Appointments: React.FC = () => {
       }
     }
   };
-  
+
 
   const handleBookClick = () => {
     if (subscriptionPlan === "Free" && appointmentCount >= 5) {
@@ -225,27 +226,26 @@ const Appointments: React.FC = () => {
     }
     setShowBookModal(true);
   };
-  
+
   const fetchSubscriptionPlan = async () => {
     try {
       const response = await axios.get(
         "https://healthcare-backend-a66n.onrender.com/api/subscription/status",
         { headers: { Authorization: `Bearer ${authToken}` } }
       );
-  
+
       setSubscriptionPlan(response.data.plan);
     } catch (error) {
       console.error("Error fetching subscription:", error);
       setSubscriptionPlan("Free"); // Default to Free if error occurs
     }
   };
-  
+
   useEffect(() => {
     if (authToken) {
       fetchSubscriptionPlan();
     }
   }, [authToken]);
-  
 
 
 
@@ -253,6 +253,54 @@ const Appointments: React.FC = () => {
 
 
 
+  const startChat = async (userId: string | null, doctorId: string | null, authToken: string | null) => {
+    try {
+      console.log("🔵 Starting chat with:", { userId, doctorId });
+
+      if (!authToken) {
+        toast.error("Authentication failed. Please log in again.");
+        console.error("⛔ No auth token found!");
+        return;
+      }
+
+      if (!userId) {
+        toast.error("User ID is missing. Please log in again.");
+        console.error("⛔ User ID is null!");
+        return;
+      }
+
+      if (!doctorId) {
+        toast.error("Doctor ID is missing. Please try again.");
+        console.error("⛔ Doctor ID is null!");
+        return;
+      }
+
+      const response = await axios.post(
+        `${API_URL}/interactions/start-chat`,
+        { userId, doctorId },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`, // ✅ Correct token usage
+          },
+        }
+      );
+
+      console.log("✅ Chat started successfully:", response.data);
+      toast.success("Chat started successfully!");
+
+      return response.data.chatId;
+    } catch (error: any) {
+      console.error("❌ Error starting chat:", error.response?.data || error.message);
+      toast.error(error.response?.data?.message || "Failed to start chat. Please try again.");
+    }
+  };
+  const handleStartChat = async (doctorId: string) => {
+    const chatId = await startChat(userId, doctorId, authToken);
+    if (chatId) {
+      navigate(`/chat/${chatId}`); // ✅ Redirect to chat page
+    }
+  };
 
 
 
@@ -273,7 +321,7 @@ const Appointments: React.FC = () => {
       setAppointments((prev) => prev.filter((appointment) => appointment._id !== id));
     } catch (err) {
       console.error("❌ Error deleting appointment:", err.response?.data || err.message);
-      alert("Failed to delete appointment");
+      toast.error("Failed to delete appointment");
     }
   };
 
@@ -344,7 +392,16 @@ const Appointments: React.FC = () => {
                     >
                       Cancel
                     </button>
+                    {/* <button
+                      onClick={() => handleStartChat(appointment.doctorId)}
+                      className="text-green-500 hover:text-green-700"
+                    >
+                      Chat
+                    </button> */}
+
+
                   </div>
+
                 </div>
               ))
             ) : (
