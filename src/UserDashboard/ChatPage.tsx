@@ -88,7 +88,7 @@ const ChatPage: React.FC = () => {
                         </option>
                     ))
                 ) : (
-                    <option disabled>No doctors available</option>
+                    <option disabled>No doctors available yet</option>
                 )}
             </select>
 
