@@ -11,8 +11,12 @@ import { Input } from "../components/ui/input"
 import { Skeleton } from "../components/ui/skeleton"
 import { Badge } from "../components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../components/ui/dropdown-menu"
-// import { format } from "date-fns"
+import { format } from "date-fns"
 import { cn } from "../lib/utils";
+import { toast } from 'react-toastify'; // Make sure this import is at the top of your file
+import { io, Socket } from "socket.io-client";
+
+
 
 interface Doctor {
   _id: string
@@ -45,7 +49,9 @@ const ChatPage: React.FC<ChatPageProps> = ({ doctor, onBack }) => {
   const [isSending, setIsSending] = useState(false)
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(doctor)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
+  const [currentChatId, setCurrentChatId] = useState<string | null>(null); // Initialize this somewhere
   const inputRef = useRef<HTMLInputElement | null>(null)
+  const socket = useRef<Socket | null>(null);
 
   useEffect(() => {
     fetchDoctors()
@@ -56,7 +62,13 @@ const ChatPage: React.FC<ChatPageProps> = ({ doctor, onBack }) => {
       fetchMessages()
     }
   }, [userId, doctorId])
-
+  useEffect(() => {
+    if (doctorId && userId) {
+      const id = userId < doctorId ? `${userId}_${doctorId}` : `${doctorId}_${userId}`;
+      setCurrentChatId(id);
+    }
+  }, [doctorId, userId]);
+  
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
@@ -69,7 +81,24 @@ const ChatPage: React.FC<ChatPageProps> = ({ doctor, onBack }) => {
       }
     }
   }, [doctor, doctors])
-
+  useEffect(() => {
+    socket.current = io("https://healthcare-backend-a66n.onrender.com", {
+      query: { userId },
+    });
+  
+    socket.current.on("connect", () => {
+      console.log("🟢 Connected to WebSocket");
+    });
+  
+    socket.current.on("new_message", (message: Message) => {
+      setMessages((prev) => [...prev, { ...message, status: "delivered" }]);
+    });
+  
+    return () => {
+      socket.current?.disconnect();
+    };
+  }, [userId]);
+  
   const fetchDoctors = async () => {
     try {
       setIsLoading(true)
@@ -128,9 +157,27 @@ const ChatPage: React.FC<ChatPageProps> = ({ doctor, onBack }) => {
   }
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !doctorId || !userId) return
-
-    // Create a temporary message with sending status
+    // Check if required fields are defined
+    if (!newMessage.trim()) {
+      toast.error("Message content cannot be empty.");
+      return;
+    }
+  
+    if (!doctorId) {
+      toast.error("Doctor ID is required.");
+      return;
+    }
+  
+    if (!userId) {
+      toast.error("User ID is required.");
+      return;
+    }
+  
+    if (!currentChatId) {
+      toast.error("Chat ID is required.");
+      return; // Don't proceed if chatId is missing
+    }
+  
     const tempMessage: Message = {
       _id: Date.now().toString(),
       sender: userId,
@@ -138,40 +185,59 @@ const ChatPage: React.FC<ChatPageProps> = ({ doctor, onBack }) => {
       content: newMessage,
       createdAt: new Date().toISOString(),
       status: "sending",
-    }
-
-    // Add to messages immediately for better UX
-    setMessages((prev) => [...prev, tempMessage])
-    setNewMessage("")
-
-    // Focus back on input
-    inputRef.current?.focus()
-
+    };
+  
+    // Add the message to the state for a better user experience
+    setMessages((prev) => [...prev, tempMessage]);
+    setNewMessage("");
+    inputRef.current?.focus();
+  
     try {
-      setIsSending(true)
+      setIsSending(true);
       const res = await axios.post(
         "https://healthcare-backend-a66n.onrender.com/api/interactions/messages",
-        { sender: userId, receiver: doctorId, content: tempMessage.content },
-        { headers: { Authorization: `Bearer ${authToken}` } },
-      )
+        {
+          sender: userId,
+          receiver: doctorId,
+          content: tempMessage.content,
+          chatId: currentChatId, // Ensure chatId is sent
+        },
+        { headers: { Authorization: `Bearer ${authToken}` } }
+      );
+  
+      const sentMessage = { ...res.data.data, status: "sent" };
 
-      // Replace temp message with actual message from server
+      // Replace temp message with real message
       setMessages((prev) =>
-        prev.map((msg) => (msg._id === tempMessage._id ? { ...res.data.data, status: "sent" } : msg)),
-      )
-
-      // Scroll to bottom
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+        prev.map((msg) => (msg._id === tempMessage._id ? sentMessage : msg))
+      );
+      
+      // Emit via WebSocket
+      socket.current?.emit("sendMessage", {
+        senderId: userId,
+        receiverId: doctorId,
+        chatId: currentChatId,
+        content: newMessage,
+        senderModel: "User",
+        receiverModel: "Doctor",
+      });
+      
+  
+      // Scroll to the bottom after message is sent
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     } catch (error) {
-      console.error("Error sending message", error)
-
-      // Mark the message as failed
-      setMessages((prev) => prev.map((msg) => (msg._id === tempMessage._id ? { ...msg, status: "failed" } : msg)))
+      console.error("Error sending message", error);
+      setMessages((prev) =>
+        prev.map((msg) => (msg._id === tempMessage._id ? { ...msg, status: "failed" } : msg))
+      );
+      toast.error("Failed to send message.");
     } finally {
-      setIsSending(false)
+      setIsSending(false);
     }
-  }
-
+  };
+  
+  
+  
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
@@ -375,34 +441,26 @@ const ChatPage: React.FC<ChatPageProps> = ({ doctor, onBack }) => {
       </div>
 
       {/* Message Input */}
-      <div className="p-4 bg-white border-t">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="rounded-full" disabled={!doctorId}>
-            <Paperclip className="h-5 w-5 text-gray-500" />
-          </Button>
-
-          <Input
-            ref={inputRef}
-            type="text"
-            className="flex-1"
-            placeholder={doctorId ? "Type a message..." : "Select a doctor to start chatting"}
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={!doctorId || isSending}
-          />
-
-          <Button
-            onClick={sendMessage}
-            className="rounded-full"
-            size="icon"
-            disabled={!newMessage.trim() || !doctorId || isSending}
-          >
-            <Send className="h-5 w-5" />
-          </Button>
-        </div>
+      <div className="p-4 bg-white border-t flex items-center gap-2">
+        <Button variant="ghost" size="icon">
+          <Paperclip className="h-5 w-5 text-gray-500" />
+        </Button>
+        <Input
+          ref={inputRef}
+          type="text"
+          placeholder="Type your message..."
+          className="flex-1"
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+          onKeyDown={handleKeyDown}
+          disabled={isSending}
+        />
+        <Button onClick={sendMessage} disabled={isSending || !newMessage.trim()} className="bg-primary text-white">
+          <Send className="h-5 w-5" />
+        </Button>
       </div>
     </div>
+
   )
 }
 

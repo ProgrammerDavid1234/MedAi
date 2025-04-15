@@ -9,7 +9,9 @@ interface Doctor {
   name: string;
   specialization: string;
   rating: number;
+  phone: string; // 👈 Add this
 }
+
 
 interface DoctorsProps {
   setActiveTab: (tab: string) => void;
@@ -114,13 +116,24 @@ const Doctors: React.FC<DoctorsProps> = ({ setActiveTab, setSelectedDoctor, setC
                 {/* Message Button (Opens Chat) */}
                 <button
                   onClick={() => {
-                    setSelectedDoctor(doctor); // Store the selected doctor
-                    setActiveTab("chat"); // Switch to chat tab
+                    if (doctor.phone) {
+                      // Convert Nigerian number like "07084700735" to international format "2347084700735"
+                      const phone = doctor.phone.startsWith("0")
+                        ? "234" + doctor.phone.slice(1)
+                        : doctor.phone;
+
+                      const message = encodeURIComponent(`Hello Dr. ${doctor.name}, I’d like to book an appointment.`);
+                      const whatsappLink = `https://wa.me/${phone}?text=${message}`;
+                      window.open(whatsappLink, "_blank");
+                    } else {
+                      alert("Doctor's phone number is not available.");
+                    }
                   }}
-                  className="flex-1 border border-blue-500 text-blue-500 px-4 py-2 rounded-md hover:bg-blue-50 transition"
+                  className="flex-1 border border-green-500 text-green-600 px-4 py-2 rounded-md hover:bg-green-50 transition"
                 >
                   Message
                 </button>
+
 
               </div>
             </div>
